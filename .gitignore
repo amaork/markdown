@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+depend
 
 # Compiled Dynamic libraries
 *.so
@@ -16,6 +17,10 @@
 *.lib
 
 # Executables
+*.md
 *.exe
 *.out
 *.app
+
+# Target
+test

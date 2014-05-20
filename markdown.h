@@ -10,6 +10,8 @@
 
 using namespace std;
 
+typedef vector<string> Md_list; 
+
 /* Markdown */
 class Markdown{
 
@@ -20,8 +22,6 @@ class Markdown{
 		~Markdown();
 		Markdown(const string& filename);
 
-
-		/* Methods */
 
 		/* Title */
 		string add_h1(const string& text="", const string& color="");
@@ -48,19 +48,19 @@ class Markdown{
 		string add_underline(const string &text);
 
 		/* Superscript */
-		string add_superscript(const string& text);
+		string add_superscript(const string& text, bool output=false);
 
 		/* Subscript */
-		string add_subscript(const string& text);
+		string add_subscript(const string& text, bool output=false);
 
 		/* Code */
-		string add_code(const string& codes);
+		string add_code_block(const string& codes);
 		
 		/* Inline code */
 		string add_inline_code(const string &codes);
 
 		/* Quote */	
-		string add_quote(const string& quote);
+		string add_quote(const string& quote, const unsigned int level=1);
 
 		/* Context */
 		string add_context(const string& text, const string& color="");
@@ -69,27 +69,33 @@ class Markdown{
 		string add_comment(const string& comment);
 
 		/* Ordered listss */
-		string add_ordered_list(const vector<string> &lists);
+		string add_ordered_list(const Md_list& list);
+		string add_ordered_list(unsigned int index, const string& context);
 
 		/* Unordered lists */
-		string add_unordered_lists(const vector<string> &lists);
+		string add_unordered_list(const string& item);
+		string add_unordered_list(const Md_list& list);
 		
 		/* Link */
 		string add_link(const string& context, const string& link);
 
 		/* Image */
-		string add_image(const string& path, const string&alt_text="");
+		string add_image(const string& path, const string& alt_text="");
 
 		/* Anchor and internal jump */
 		string add_anchor(const string& context, const string& id);
 		string add_intjump(const string& context, const string& jump_id);
+
+		/* Syntax constract */
+		static const unsigned int max_title_level;
+		static const unsigned int max_quote_level;
 	
 	private:
 		
 		ofstream md_output;
 
 		/* Output process */
-		string output_process(const string& context);
+		string output_process(const string& context, bool output=true);
 
 		/* Font color analysic */
 		string color_analysis(const string& context, const string& color);
@@ -97,6 +103,7 @@ class Markdown{
 		/* Syntax generator */
 		string syntax_generator(const string& syntax, const string& data);
 		string syntax_generator(const string& syntax, const string& attr, const string& data);
+		string syntax_generator(const string& syntax, unsigned int level, unsigned int max_level);
 
 		/* Static data members */
 		static const string title_syntax;
@@ -107,10 +114,11 @@ class Markdown{
 		static const string strikethrough_syntax;
 		static const string superscript_syntax;
 		static const string subscript_syntax;
-		static const string code_syntax;
+		static const string codeblock_syntax;
 		static const string inlinecode_syntax;
 		static const string quote_syntax;
 		static const string comment_syntax;
+		static const string orderedlist_syntax;
 		static const string unorderedlist_syntax;
 		static const string fontcolor_syntax;
 		static const string link_syntax;

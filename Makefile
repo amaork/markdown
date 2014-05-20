@@ -1,5 +1,5 @@
 CC			=	g++
-CPPFLAGS	=	-Wall -g	
+CPPFLAGS	=	-Wall -g -DDEBUG	
 LDSHFLAGS	=	-rdynamic -shared 
 ARFLAGS		=	rcv
 TARGETS		=	libmarkdown.a libmarkdown.so test	

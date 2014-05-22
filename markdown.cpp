@@ -33,12 +33,40 @@ const unsigned int Markdown::max_title_level		=	6;
 const unsigned int Markdown::max_quote_level		=	12; 
 const unsigned int Markdown::max_nestedlist_level	=	12;
 
+
 /**************************************************************************************
 	@brief	:	Constructor and destructor
 **************************************************************************************/
+void Markdown::init(void)
+{
+	/* Link end */
+	link_end = " \t\n";
+
+	/* Link start  */	
+	link_start.push_back("www");
+	link_start.push_back("http://");
+	link_start.push_back("https://");
+
+	/* Image end */
+	image_end.push_back(".bmp");
+	image_end.push_back(".png");
+	image_end.push_back(".gif");
+	image_end.push_back(".jpg");
+	image_end.push_back(".jpeg");
+	image_end.push_back(".tiff");
+}
+
+Markdown::Markdown(void)
+{
+	init();
+}
+
 Markdown::Markdown(const string& filename)
 {
 	string output_name = filename;
+
+	/* Internal init */
+	init();
 
 	/* Check if filename has *.md extend */	
 	if (filename.find(".md") == string::npos && filename.find(".markdown") == string::npos){
@@ -58,6 +86,7 @@ Markdown::Markdown(const string& filename)
 
 		cerr << "Markdown file: " << filename << " open failed!" << endl;
 	}
+
 }
 
 
@@ -477,9 +506,63 @@ string Markdown::add_color_end(void)
 string Markdown::add_context(const string& context, const string& color)
 {
 	stringstream format;
+	string text = context;
+	string::size_type start, end;	
+	Md_list::const_iterator skey, ekey;
 
-	format << color_analysis(context, color);
-		
+	/* Search link start */
+	find_start:
+	for (skey = link_start.begin(), start = 0; text.size() && skey != link_start.end(); skey++){
+
+		/* Donot found link start  */
+		if ((start = text.find(*skey)) == string::npos){
+
+			continue;
+		}
+
+		/* Search for image end */
+		find_end:
+		for (ekey = image_end.begin(), end = 0; text.size() && ekey != image_end.end(); ekey++){
+
+			cout << *skey << *ekey << ":" << start << endl;
+
+			/* Found imaged end */
+			if ((end = text.find(*ekey, start)) != string::npos){
+
+				/* Context */
+				if (start){
+								
+					format << color_analysis(text.substr(0, start), color) << endl;
+				}
+
+				/* Link */
+				format << syntax_generator(image_syntax, text.substr(start, end + ekey->size()), text.substr(start, end + ekey->size())) << endl;
+				text.erase(0, start + end + ekey->size());
+				goto find_start;
+			}
+
+			/* Found link end */
+			if ((end = text.find_first_of(link_end, start)) != string::npos){
+
+				/* Context */
+				if (start){
+
+					format << color_analysis(text.substr(0, start), color) << endl;
+				}
+
+				/* Link */
+				format << syntax_generator(link_syntax, text.substr(start, end + 1), text.substr(start, end + 1)) << endl;
+				text.erase(0, start + end + 1);
+				goto find_start;
+			}
+
+		} /* end of ekey for */
+
+
+
+	} /* end of skey for */
+
+	
 	return output_process(format.str());	
 }
 

@@ -19,6 +19,7 @@ class Markdown{
 	public:
 
 		/* Constructor */
+		Markdown();
 		~Markdown();
 		Markdown(const string& filename);
 
@@ -101,6 +102,9 @@ class Markdown{
 		
 		ofstream md_output;
 
+		/* Common init */
+		void init(void);
+
 		/* Int to string */
 		inline string int_to_str(unsigned int number)
 		{
@@ -147,6 +151,12 @@ class Markdown{
 		/* Syntax generator */
 		static const string syntax_data;
 		static const string syntax_attr;	
+
+		/* Link and image analysis */
+		string  link_end;
+		Md_list link_start;
+		Md_list image_end;
+
 };
 
 #endif

@@ -99,5 +99,9 @@ int main(int argc, char **argv)
 	/* Internal jump */
 	test.add_intjump("这是一个文档内部跳转链接，可以跳转到文件的开始位置ID为start的锚", "start");
 
+	/* Test auto image link detect */
+	test.add_context("下面是用来测试add_context函数自动分析图片链接功能的:http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg");
+	test.add_context("http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg图片链接测试");
+
 	return 0;
 }

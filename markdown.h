@@ -68,14 +68,6 @@ class Markdown{
 		/* Comment */
 		string add_comment(const string& comment);
 
-		/* Ordered listss */
-		string add_ordered_list(const Md_list& list);
-		string add_ordered_list(unsigned int index, const string& context);
-
-		/* Unordered lists */
-		string add_unordered_list(const string& item);
-		string add_unordered_list(const Md_list& list);
-		
 		/* Link */
 		string add_link(const string& context, const string& link);
 
@@ -86,13 +78,36 @@ class Markdown{
 		string add_anchor(const string& context, const string& id);
 		string add_intjump(const string& context, const string& jump_id);
 
+		/* Color start and end */
+		string add_color_start(const string& color);
+		string add_color_end(void);	
+
+		/* Ordered listss */
+		string add_ordered_list(const Md_list& list);
+		string add_ordered_list(const Md_list& list, unsigned int level);
+		string add_ordered_list(unsigned int index, const string& context, unsigned int level=0);
+
+		/* Unordered lists */
+		string add_unordered_list(const Md_list& list);
+		string add_unordered_list(const Md_list& list, unsigned int level);
+		string add_unordered_list(const string& item, unsigned int level=0);
+		
 		/* Syntax constract */
 		static const unsigned int max_title_level;
 		static const unsigned int max_quote_level;
+		static const unsigned int max_nestedlist_level;
 	
 	private:
 		
 		ofstream md_output;
+
+		/* Int to string */
+		inline string int_to_str(unsigned int number)
+		{
+			stringstream conv;
+			conv << number;
+			return conv.str();
+		}
 
 		/* Output process */
 		string output_process(const string& context, bool output=true);
@@ -103,7 +118,7 @@ class Markdown{
 		/* Syntax generator */
 		string syntax_generator(const string& syntax, const string& data);
 		string syntax_generator(const string& syntax, const string& attr, const string& data);
-		string syntax_generator(const string& syntax, unsigned int level, unsigned int max_level);
+		string syntax_generator(const string& syntax, unsigned int level, unsigned int max_level, bool space=true);
 
 		/* Static data members */
 		static const string title_syntax;
@@ -118,9 +133,12 @@ class Markdown{
 		static const string inlinecode_syntax;
 		static const string quote_syntax;
 		static const string comment_syntax;
+		static const string nestedlist_syntax;
 		static const string orderedlist_syntax;
 		static const string unorderedlist_syntax;
 		static const string fontcolor_syntax;
+		static const string color_start_syntax;
+		static const string color_end_syntax;
 		static const string link_syntax;
 		static const string image_syntax;
 		static const string anchor_syntax;

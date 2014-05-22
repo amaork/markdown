@@ -59,6 +59,10 @@ int main(int argc, char **argv)
 	/* Commant */
 	test.add_comment("这是一个注释，不会显示在HTML中");
 
+	/* Color start */
+	test.add_context("从下面开始文字将显示为红色的；");
+	test.add_color_start("red");
+
 	/* Ordered list */
 	test.add_context("\n下面是有编号列表语法:\n");	
 
@@ -67,11 +71,23 @@ int main(int argc, char **argv)
 		format.str("");
 		format << "顺序列表，编号:" << idx;
 		test.add_ordered_list(idx, format.str());
+		test.add_ordered_list(1, "嵌套顺序列表1", 1);
+		test.add_ordered_list(2, "嵌套顺序列表1", 1);
 	}
+
+	/* Color end */
+	test.add_color_end();
+	test.add_context("从下面开始文字将显示为蓝色的；");
+	test.add_color_start("blue");
 
 	/* Undered list */
 	test.add_context("\n下面是无编号列表语法:\n");
-	test.add_unordered_list(Md_list(10, "无编号列表"));
+	for (idx = 1; idx <= 10; idx++){
+
+		test.add_unordered_list("无序列表");
+		test.add_unordered_list("嵌套无序列表1", 1);
+		test.add_unordered_list("嵌套无序列表1", 1);
+	}
 	
 	/* Link */
 	test.add_link("这是一个链接语法，指向该项目主页", "https://github.com/amaork/markdown");

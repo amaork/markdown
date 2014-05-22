@@ -18,16 +18,20 @@ const string Markdown::inlinecode_syntax	= 	"<p><code>data</code></p>";
 const string Markdown::codeblock_syntax		=	"    ";	
 const string Markdown::quote_syntax			= 	">";
 const string Markdown::comment_syntax		=	"<!--data-->";
+const string Markdown::nestedlist_syntax	=	"\t";
 const string Markdown::orderedlist_syntax	=	"attr. data";
 const string Markdown::unorderedlist_syntax	=	"+ data";
 const string Markdown::fontcolor_syntax		=	"<font color=attr>data</font>";
+const string Markdown::color_start_syntax	=	"<font color=data>";
+const string Markdown::color_end_syntax		=	"</font>";
 const string Markdown::link_syntax			=	"[data](attr)";
 const string Markdown::image_syntax			=	"![data](attr)";
 const string Markdown::anchor_syntax		=	"<a id=\"attr\">data</a>";
 const string Markdown::intjump_syntax		=	"[data](#attr)";
 
-const unsigned int Markdown::max_title_level=	6;
-const unsigned int Markdown::max_quote_level=	12; 
+const unsigned int Markdown::max_title_level		=	6;
+const unsigned int Markdown::max_quote_level		=	12; 
+const unsigned int Markdown::max_nestedlist_level	=	12;
 
 /**************************************************************************************
 	@brief	:	Constructor and destructor
@@ -66,7 +70,8 @@ Markdown::~Markdown(void)
 }
 
 /**************************************************************************************
-	@brief	:	Syntax generator, replace of syntax_data with data 
+	@brief	:	Syntax generator, replace of syntax_data with data, if syntax_data do
+				not found, append data to syntax 
 **************************************************************************************/
 string Markdown::syntax_generator(const string& syntax, const string& data)
 {
@@ -166,7 +171,7 @@ string Markdown::syntax_generator(const string& syntax, const string& attr, cons
 	@brief	:	Syntax generator, repeate syntax level times, level must less then or
 				equal to max_level 
 **************************************************************************************/
-string Markdown::syntax_generator(const string& syntax, unsigned int level, unsigned int max_level)
+string Markdown::syntax_generator(const string& syntax, unsigned int level, unsigned int max_level, bool space)
 {
 	unsigned int idx;
 	stringstream format;
@@ -185,7 +190,10 @@ string Markdown::syntax_generator(const string& syntax, unsigned int level, unsi
 	}
 	
 	/* Append a space at end */
-	format << " ";
+	if (space){
+
+		format << " ";
+	}
 	
 	out:
 	return format.str();
@@ -230,16 +238,14 @@ string Markdown::color_analysis(const string& context, const string& color)
 
 /**************************************************************************************
 	@brief	:	Add title
+				color_analysic: analysic color with context
+				inside syntax_generator: generate title syntax
+				outside syntax_generator: generate tile and context with color
 **************************************************************************************/
 string Markdown::add_title(unsigned int level, const string& title, const string& color)
 {
-	stringstream format;
-
-	format << syntax_generator(title_syntax, level, max_title_level) << color_analysis(title, color);
-
-	return output_process(format.str());	
+	return output_process(syntax_generator(syntax_generator(title_syntax, level, max_title_level), color_analysis(title, color)));
 }
-
 
 string Markdown::add_h1(const string& title, const string& color)
 {
@@ -338,11 +344,7 @@ string Markdown::add_inline_code(const string &codes)
 	
 string Markdown::add_quote(const string &quote, const unsigned int level)
 {
-	stringstream format;
-
-	format << syntax_generator(quote_syntax, level, max_quote_level) << quote << endl;
-
-	return output_process(format.str());
+	return output_process(syntax_generator(syntax_generator(quote_syntax, level, max_quote_level), quote));
 }
 
 
@@ -351,24 +353,39 @@ string Markdown::add_quote(const string &quote, const unsigned int level)
 **************************************************************************************/
 string Markdown::add_ordered_list(const Md_list& list)
 {
-	stringstream format, idx;
+	stringstream format;
 	Md_list::const_iterator it;
 
 	for (it = list.begin(); it != list.end(); it++){
 
-		idx.str("");
-		idx << it - list.begin() + 1;
-		format << syntax_generator(orderedlist_syntax, idx.str(), *it) << endl;
+		format << syntax_generator(orderedlist_syntax, int_to_str(it - list.begin() + 1), *it) << endl;
 	}
 
 	return output_process(format.str());
 }
 
-string Markdown::add_ordered_list(unsigned int index, const string& context)
+string Markdown::add_ordered_list(const Md_list& list, unsigned int level)
 {
-	stringstream index_str;
-	index_str << index;
-	return output_process(syntax_generator(orderedlist_syntax, index_str.str(), context));
+	stringstream format;
+	Md_list::const_iterator it;
+
+	for (it = list.begin(); it != list.end(); it++){
+		
+		format << syntax_generator(syntax_generator(nestedlist_syntax, level, max_nestedlist_level, false), syntax_generator(orderedlist_syntax, int_to_str(it - list.begin() + 1), *it)) << endl;
+	}	
+
+	return output_process(format.str());
+}
+
+string Markdown::add_ordered_list(unsigned int index, const string& context, unsigned int nested_level)
+{
+	if (nested_level == 0){
+		
+		return output_process(syntax_generator(orderedlist_syntax, int_to_str(index), context));
+	}
+	else{
+		return output_process(syntax_generator(syntax_generator(nestedlist_syntax, nested_level, max_nestedlist_level, false), syntax_generator(orderedlist_syntax, int_to_str(index), context)));
+	}
 }
 
 string Markdown::add_unordered_list(const Md_list& list)
@@ -384,9 +401,29 @@ string Markdown::add_unordered_list(const Md_list& list)
 	return output_process(format.str());
 }
 
-string Markdown::add_unordered_list(const string& item)
+string Markdown::add_unordered_list(const Md_list& list, unsigned int nested_level)
 {
-	return output_process(syntax_generator(unorderedlist_syntax, item));
+	stringstream format;
+	Md_list::const_iterator it;
+
+	for (it = list.begin(); it != list.end(); it++){
+
+		format << syntax_generator(syntax_generator(nestedlist_syntax, nested_level,  max_nestedlist_level, false), syntax_generator(unorderedlist_syntax, *it)) << endl;
+	}	
+
+	return output_process(format.str());
+}
+
+string Markdown::add_unordered_list(const string& item, unsigned int nested_level)
+{
+	if (nested_level == 0){
+	
+		return output_process(syntax_generator(unorderedlist_syntax, item));
+	}
+	else{
+		
+		return output_process(syntax_generator(syntax_generator(nestedlist_syntax, nested_level, max_nestedlist_level, false), syntax_generator(unorderedlist_syntax, item)));
+	}
 }
 
 /**************************************************************************************
@@ -421,7 +458,19 @@ string Markdown::add_comment(const string& comment)
 	return output_process(syntax_generator(comment_syntax, comment));
 }
 
- 
+/**************************************************************************************
+**************************************************************************************/
+string Markdown::add_color_start(const string& color)
+{
+	return output_process(syntax_generator(color_start_syntax, color));
+}
+
+string Markdown::add_color_end(void)
+{
+	return output_process(syntax_generator(color_end_syntax, ""));
+}
+
+
 /**************************************************************************************
 	@brief	:	Add context with color analysic
 **************************************************************************************/

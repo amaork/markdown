@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
 	/* Test auto image link detect */
 	test.add_context("下面是用来测试add_context函数自动分析图片链接功能的:http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg");
-	test.add_context("http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg图片链接测试");
+	test.add_context("http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg图片链接测试https://github.com/amaork/markdown链接测试");
 
 	return 0;
 }

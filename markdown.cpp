@@ -521,7 +521,6 @@ string Markdown::add_context(const string& context, const string& color)
 		}
 
 		/* Search for image end */
-		find_end:
 		for (ekey = image_end.begin(), end = 0; text.size() && ekey != image_end.end(); ekey++){
 
 			cout << *skey << *ekey << ":" << start << endl;
@@ -536,7 +535,7 @@ string Markdown::add_context(const string& context, const string& color)
 				}
 
 				/* Link */
-				format << syntax_generator(image_syntax, text.substr(start, end + ekey->size()), text.substr(start, end + ekey->size())) << endl;
+				format << endl << syntax_generator(image_syntax, text.substr(start, end + ekey->size()), text.substr(start, end + ekey->size())) << endl << endl;
 				text.erase(0, start + end + ekey->size());
 				goto find_start;
 			}
@@ -551,16 +550,20 @@ string Markdown::add_context(const string& context, const string& color)
 				}
 
 				/* Link */
-				format << syntax_generator(link_syntax, text.substr(start, end + 1), text.substr(start, end + 1)) << endl;
+				format << endl << syntax_generator(link_syntax, text.substr(start, end + 1), text.substr(start, end + 1)) << endl << endl;
 				text.erase(0, start + end + 1);
 				goto find_start;
 			}
 
 		} /* end of ekey for */
 
-
-
 	} /* end of skey for */
+
+	/* Do not fink link and image */
+	if (text.size()){
+
+		format << color_analysis(text, color) << endl;
+	}
 
 	
 	return output_process(format.str());	

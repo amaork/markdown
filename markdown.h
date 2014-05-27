@@ -1,6 +1,7 @@
 #ifndef _MARKDOWN_H_
 #define _MARKDOWN_H_
 
+#include <map>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -113,6 +114,15 @@ class Markdown{
 			return conv.str();
 		}
 
+		/* Check if text is a url */
+		bool is_a_url(const string& text);
+
+		/* Check if text is image url */
+		bool is_a_image(const string& text);
+
+		/* Url analysis */
+		string url_analysis(const string& text, const string& color);
+
 		/* Output process */
 		string output_process(const string& context, bool output=true);
 
@@ -153,7 +163,7 @@ class Markdown{
 		static const string syntax_attr;	
 
 		/* Link and image analysis */
-		string  link_end;
+		string  split_ch;
 		Md_list link_start;
 		Md_list image_end;
 

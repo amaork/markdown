@@ -101,7 +101,8 @@ int main(int argc, char **argv)
 
 	/* Test auto image link detect */
 	test.add_context("下面是用来测试add_context函数自动分析图片链接功能的:http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg");
-	test.add_context("http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg图片链接测试https://github.com/amaork/markdown链接测试");
+	test.add_context("下面的图片连接不整被正常识别，因为文字和连接之间没有间隔http://ig3.douban.com/view/page_note/large/public/p28269709-1.jpg链接测试 https://github.com/amaork/markdown");
+	test.add_context("这条语句不能被正常解析为图片链接，因为在文字和连接之间没有空格或tab或换行字符http://img3.douban.com/view/page_note/large/public/p28269709-1.jpg", "red");
 
 	return 0;
 }

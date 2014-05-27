@@ -39,11 +39,12 @@ const unsigned int Markdown::max_nestedlist_level	=	12;
 **************************************************************************************/
 void Markdown::init(void)
 {
-	/* Link end */
-	link_end = " \t\n";
+	/* Url and context split character */
+	split_ch = " \t\n";
 
 	/* Link start  */	
-	link_start.push_back("www");
+	link_start.push_back("www.");
+	link_start.push_back("ftp://");
 	link_start.push_back("http://");
 	link_start.push_back("https://");
 
@@ -501,70 +502,181 @@ string Markdown::add_color_end(void)
 
 
 /**************************************************************************************
+	@brief	:	Check if text is a url 
+**************************************************************************************/
+bool Markdown::is_a_url(const string& text)
+{
+	Md_list::const_iterator key;
+
+	/* Find link start */
+	for (key = link_start.begin(); key != link_start.end(); key++){
+
+		/* At the beging */
+		if (text.find(*key) == 0){
+
+			return true;	
+		}
+	}	
+
+	return false;
+}
+
+bool Markdown::is_a_image(const string& text)
+{
+	Md_list::const_iterator key;
+
+	/* First image link should be a url */
+	if (is_a_url(text) == false){
+
+		return false;
+	}
+
+	/* Find link end */
+	for (key = image_end.begin(); key != image_end.end(); key++){
+
+		if (text.find(*key) + key->size() == text.size()){
+		
+			return true;
+		}
+	}
+
+	return false;
+}
+
+string Markdown::url_analysis(const string& context, const string& color)
+{
+	stringstream format;
+	string text = context;
+	Md_list::const_iterator key;
+	string::size_type start, end;
+	string url,url_keyword, image_keyword;
+
+	/* Process text, sperate context and url and image */
+	for (start = 0, end = 0; text.size(); start = 0, end = 0){
+
+		/* Find if there have url keyword */	
+		for (key = link_start.begin(), url_keyword = ""; key != link_start.end(); key++){
+		
+			/* Found url keyword */
+			if ((start = text.find(*key)) != string::npos){
+
+				url_keyword = *key;
+				break;
+			}
+		}
+
+		/* Do not found url */
+		if (url_keyword.empty()){
+
+			format << color_analysis(text, color) << endl;
+			text.erase(0, text.size());
+			continue;
+		}
+
+
+		/* Find if there have image keyword */
+		for (key = image_end.begin(), image_keyword = ""; key != image_end.end(); key++){
+
+			/* Found image keyword */
+			if ((end = text.find(*key)) != string::npos){
+
+				image_keyword = *key;
+				break;
+			}
+		}
+
+	
+		/* Is a normal url */		
+		if (image_keyword.empty()){
+
+			/* Context */
+			if (start){
+
+				format << color_analysis(text.substr(0, start), color) << endl;
+			}
+
+			/* Url */
+			url = text.substr(start, text.size());
+
+			/* Remove already processed data */
+			format << syntax_generator(link_syntax, url, url) << endl << endl;	
+			text.erase(0, text.size());
+			continue;	
+		}
+
+		/* Is a image url */
+		/* Context */
+		if (start){
+
+			format << color_analysis(text.substr(0, start), color) << endl;
+		}
+
+		/* Url */
+		url = text.substr(start, end + image_keyword.size());
+		
+		/* Remove already processed data */
+		format << syntax_generator(image_syntax, url, url) << endl << endl;	
+		text.erase(0, start + end + image_keyword.size());
+	}
+	
+
+	return format.str();
+}
+
+
+/**************************************************************************************
 	@brief	:	Add context with color analysic
 **************************************************************************************/
 string Markdown::add_context(const string& context, const string& color)
 {
+	Md_list db;
 	stringstream format;
 	string text = context;
-	string::size_type start, end;	
-	Md_list::const_iterator skey, ekey;
+	string::size_type end;	
+	Md_list::const_iterator item;
 
-	/* Search link start */
-	find_start:
-	for (skey = link_start.begin(), start = 0; text.size() && skey != link_start.end(); skey++){
+	/* Read context to analysis database */
+	while(text.size()){
 
-		/* Donot found link start  */
-		if ((start = text.find(*skey)) == string::npos){
+		/* Find split character */
+		end = text.find_first_of(split_ch, 0);			
 
+		/* To the end */
+		if (end == string::npos){
+
+			end = text.size();
+			db.push_back(text.substr(0, end));
+			text.erase(0, end);
+		}
+		else{
+			db.push_back(text.substr(0, end));
+			text.erase(0, end + 1);
+		}
+	}
+
+	/* Process each of the text */
+	for (item = db.begin(); item != db.end(); item++){
+	
+		cout << *item << endl;
+
+		/* Is a image */
+		if (is_a_image(*item)){
+			
+			format << syntax_generator(image_syntax, *item, *item) << endl << endl;
 			continue;
 		}
 
-		/* Search for image end */
-		for (ekey = image_end.begin(), end = 0; text.size() && ekey != image_end.end(); ekey++){
+		/* Is a link */
+		if (is_a_url(*item)){
 
-			cout << *skey << *ekey << ":" << start << endl;
-
-			/* Found imaged end */
-			if ((end = text.find(*ekey, start)) != string::npos){
-
-				/* Context */
-				if (start){
-								
-					format << color_analysis(text.substr(0, start), color) << endl;
-				}
-
-				/* Link */
-				format << endl << syntax_generator(image_syntax, text.substr(start, end + ekey->size()), text.substr(start, end + ekey->size())) << endl << endl;
-				text.erase(0, start + end + ekey->size());
-				goto find_start;
-			}
-
-			/* Found link end */
-			if ((end = text.find_first_of(link_end, start)) != string::npos){
-
-				/* Context */
-				if (start){
-
-					format << color_analysis(text.substr(0, start), color) << endl;
-				}
-
-				/* Link */
-				format << endl << syntax_generator(link_syntax, text.substr(start, end + 1), text.substr(start, end + 1)) << endl << endl;
-				text.erase(0, start + end + 1);
-				goto find_start;
-			}
-
-		} /* end of ekey for */
-
-	} /* end of skey for */
-
-	/* Do not fink link and image */
-	if (text.size()){
-
-		format << color_analysis(text, color) << endl;
+			format << syntax_generator(link_syntax, *item, *item) << endl;
+			continue;
+		}
+		
+		/* Normal context, may be with link or image  */
+		format << url_analysis(*item, color);
 	}
-
+	
 	
 	return output_process(format.str());	
 }
